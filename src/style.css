@@ -1,0 +1,31 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: #050506;
+  overflow: hidden;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+#letterbox {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at center, #141416 0%, #050506 70%);
+}
+
+#game {
+  display: block;
+  outline: none;
+  box-shadow: 0 0 48px rgba(0, 0, 0, 0.65);
+  image-rendering: auto;
+  -webkit-font-smoothing: antialiased;
+}
