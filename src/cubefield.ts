@@ -80,6 +80,7 @@ export class CubeField {
   maxDensity = 0.6;
   invincibleTime = 0;
   speedMul = 1;
+  turnMul = 1;
   acceleration = 5;
   drag = 0.87;
   round = -1;
@@ -179,6 +180,8 @@ export class CubeField {
       STAGE_W > STAGE_H
         ? this.visualSpan(STAGE_H, STAGE_W) / Math.max(1e-6, this.visualSpan(STAGE_W, STAGE_H))
         : 1;
+    this.turnMul = STAGE_W > STAGE_H ? 1.25 : 1;
+    this.updateAccel();
     this.generationWidth = (this.projection.ViewWidth / this.cubeSize) * 10;
     let node = this.cubes.First;
     while (node !== null) {
@@ -309,7 +312,7 @@ export class CubeField {
   }
 
   updateAccel(): void {
-    this.acceleration = this.SpeedTarget / 15;
+    this.acceleration = (this.SpeedTarget / 15) * this.turnMul;
   }
 
   /** One 30 FPS simulation tick — original CubeField.Update + clip enterFrames. */
