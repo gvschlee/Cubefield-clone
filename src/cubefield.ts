@@ -414,32 +414,41 @@ export class CubeField {
   }
 
   private collideAndLayer(): void {
+    const zHitMin = this.shipZ - this.shipHalfLength;
+    const zHitMax = this.shipZ + this.shipHalfLength;
+    const dartHalf = 13;
     let node = this.cubes.Last;
     while (node !== null) {
       const cube = node.Data;
       cube.Surface = "low";
+      const zAfter = cube.Position.Z;
+      const zBefore = zAfter + this.Speed;
       if (
         Math.abs(cube.Position.X) <
         (this.cubeSize + this.projection.ViewWidth) / 2 +
-          this.projection.TanU * cube.Position.Z
+          this.projection.TanU * zAfter
       ) {
-        if (cube.Position.Z < this.shipZ + this.shipHalfLength) {
-          if (
-            this.invincibleTime < 0 &&
-            !this.Dead &&
-            !this.Idle &&
-            cube.Position.Z > this.shipZ - this.shipHalfLength &&
-            Math.abs(cube.Position.X) <
-              this.shipHalfWidth + this.cubeHalfSize * this.hitCubeScale
-          ) {
+        if (zAfter < this.shipZ) {
+          cube.Surface = "high";
+        }
+        const zCrossed = zBefore > zHitMin && zAfter < zHitMax;
+        if (
+          zCrossed &&
+          this.invincibleTime < 0 &&
+          !this.Dead &&
+          !this.Idle
+        ) {
+          const zAtHit = Math.max(zAfter, Math.min(zBefore, this.shipZ));
+          const perspX =
+            this.projection.ViewWidth /
+            (this.projection.ViewWidth + 2 * Math.max(1, zAtHit) * this.projection.TanU);
+          const hitX = dartHalf / perspX + this.cubeHalfSize * this.hitCubeScale;
+          if (Math.abs(cube.Position.X) < hitX) {
             this.Dead = true;
             this.blur = 0;
             this.TopScore = Math.max(this.Score, this.TopScore);
             this.saveTopScore();
             this.ship.fade = true;
-          }
-          if (cube.Position.Z < this.shipZ) {
-            cube.Surface = "high";
           }
         }
       }
