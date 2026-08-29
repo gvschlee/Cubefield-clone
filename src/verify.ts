@@ -140,6 +140,7 @@ for (let i = 0; i < 20; i++) field.Update();
 check("death returns to idle", field.Idle && !field.Dead);
 check("top score kept", field.TopScore === top && field.TopScore > 0);
 check("score reset on idle", field.Score === 0);
+check("last score kept", field.LastScore > 0);
 
 field.Begin();
 field.invincibleTime = 100000;

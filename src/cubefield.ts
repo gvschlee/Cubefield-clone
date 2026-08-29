@@ -95,6 +95,7 @@ export class CubeField {
   Dead = false;
 
   Score = 0;
+  LastScore = 0;
   TopScore = 0;
   surfaceAlpha = 100;
   quality: Quality = "HIGH";
@@ -474,7 +475,8 @@ export class CubeField {
           if (Math.abs(cube.Position.X) < hitX) {
             this.Dead = true;
             this.blur = 0;
-            this.TopScore = Math.max(this.Score, this.TopScore);
+            this.LastScore = Math.floor(this.Score);
+            this.TopScore = Math.max(this.LastScore, this.TopScore);
             this.saveTopScore();
             this.ship.fade = true;
           }

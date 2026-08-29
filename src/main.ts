@@ -333,7 +333,7 @@ function drawHud(g: CanvasRenderingContext2D): void {
   const night = field.style === 1;
   const cx = STAGE_W / 2;
 
-  if (!field.Idle && !field.Dead) {
+  if (!field.Idle) {
     g.fillStyle = night ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.28)";
     g.font = "bold 22px Arial, Helvetica, sans-serif";
     g.fillText(String(Math.floor(field.Score)), cx + 1, 12);
@@ -341,10 +341,25 @@ function drawHud(g: CanvasRenderingContext2D): void {
     g.fillText(String(Math.floor(field.Score)), cx, 11);
   }
 
+  if (field.Dead) {
+    const n = Math.floor(field.Score);
+    g.fillStyle = night ? "rgba(0,0,0,0.28)" : "rgba(255,255,255,0.22)";
+    g.font = "bold 16px Arial, Helvetica, sans-serif";
+    g.fillText("SCORE", cx + 1, STAGE_H * 0.36 + 1);
+    g.font = "bold 56px Arial, Helvetica, sans-serif";
+    g.fillText(String(n), cx + 2, STAGE_H * 0.36 + 26);
+    g.fillStyle = ink;
+    g.font = "bold 16px Arial, Helvetica, sans-serif";
+    g.fillText("SCORE", cx, STAGE_H * 0.36);
+    g.font = "bold 56px Arial, Helvetica, sans-serif";
+    g.fillText(String(n), cx, STAGE_H * 0.36 + 24);
+  }
+
   if (field.overlay.menuVisible) {
     const a = field.overlay.menuAlpha / 100;
+    const hasLast = field.LastScore > 0;
     const menuW = Math.min(440, STAGE_W - 40);
-    const menuH = 188;
+    const menuH = hasLast ? 210 : 188;
     const menuX = (STAGE_W - menuW) / 2;
     const menuY = Math.max(20, Math.min(STAGE_H * 0.16, STAGE_H / 2 - menuH / 2));
     g.globalAlpha = a;
@@ -358,17 +373,28 @@ function drawHud(g: CanvasRenderingContext2D): void {
     g.fillText("CUBEFIELD", cx, menuY + 14);
     g.font = "13px Arial, Helvetica, sans-serif";
     g.fillStyle = night ? "#b6f0c8" : "#334155";
-    g.fillText("A fan clone of the 2006 original", cx, menuY + 64);
+    g.fillText("A fan clone of the 2006 original", cx, menuY + 58);
 
     g.fillStyle = ink;
-    g.font = "16px Arial, Helvetica, sans-serif";
-    g.fillText(`Top Score: ${field.TopScore}`, cx, menuY + 88);
-
-    g.font = "13px Arial, Helvetica, sans-serif";
-    g.fillText("Hold left / right of center to dodge", cx, menuY + 112);
-    g.fillText("P pause   ·   Q quality", cx, menuY + 128);
-    g.font = "bold 14px Arial, Helvetica, sans-serif";
-    g.fillText("Tap, click, or press Enter to start", cx, menuY + 148);
+    if (hasLast) {
+      g.font = "bold 22px Arial, Helvetica, sans-serif";
+      g.fillText(`Score: ${field.LastScore}`, cx, menuY + 80);
+      g.font = "16px Arial, Helvetica, sans-serif";
+      g.fillText(`Top Score: ${field.TopScore}`, cx, menuY + 108);
+      g.font = "13px Arial, Helvetica, sans-serif";
+      g.fillText("Hold left / right of center to dodge", cx, menuY + 134);
+      g.fillText("P pause   ·   Q quality", cx, menuY + 150);
+      g.font = "bold 14px Arial, Helvetica, sans-serif";
+      g.fillText("Tap, click, or press Enter to start", cx, menuY + 172);
+    } else {
+      g.font = "16px Arial, Helvetica, sans-serif";
+      g.fillText(`Top Score: ${field.TopScore}`, cx, menuY + 88);
+      g.font = "13px Arial, Helvetica, sans-serif";
+      g.fillText("Hold left / right of center to dodge", cx, menuY + 112);
+      g.fillText("P pause   ·   Q quality", cx, menuY + 128);
+      g.font = "bold 14px Arial, Helvetica, sans-serif";
+      g.fillText("Tap, click, or press Enter to start", cx, menuY + 148);
+    }
 
     g.font = "11px Arial, Helvetica, sans-serif";
     g.globalAlpha = a * 0.85;
