@@ -1,5 +1,5 @@
 import "./style.css";
-import { CubeField, STAGE_H, STAGE_W, SIM_DT, makeProjection, horizonY, PLAY_H } from "./cubefield";
+import { CubeField, STAGE_H, STAGE_W, SIM_DT, makeProjection, horizonY } from "./cubefield";
 import { Input } from "./input";
 import { Model } from "./model";
 
@@ -66,15 +66,11 @@ document.addEventListener("gesturestart", (e) => {
 });
 
 function viewportSize(): { w: number; h: number } {
-  const box = document.getElementById("letterbox");
-  if (box !== null && box.clientWidth > 0 && box.clientHeight > 0) {
-    return { w: box.clientWidth, h: box.clientHeight };
-  }
   const vv = window.visualViewport;
-  return {
-    w: Math.floor(vv?.width ?? window.innerWidth),
-    h: Math.floor(vv?.height ?? window.innerHeight),
-  };
+  if (vv != null && vv.width > 0 && vv.height > 0) {
+    return { w: Math.floor(vv.width), h: Math.floor(vv.height) };
+  }
+  return { w: Math.floor(window.innerWidth), h: Math.floor(window.innerHeight) };
 }
 
 function logicalStage(cssW: number, cssH: number): { w: number; h: number } {
@@ -88,6 +84,9 @@ function logicalStage(cssW: number, cssH: number): { w: number; h: number } {
 
 function resize(): void {
   const { w: cssW, h: cssH } = viewportSize();
+  const vv = window.visualViewport;
+  canvas.style.left = `${Math.floor(vv?.offsetLeft ?? 0)}px`;
+  canvas.style.top = `${Math.floor(vv?.offsetTop ?? 0)}px`;
   canvas.style.width = `${cssW}px`;
   canvas.style.height = `${cssH}px`;
   const dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -212,7 +211,7 @@ function drawWorld(g: CanvasRenderingContext2D): void {
   g.fillStyle = ground;
   g.fillRect(-pad, horizon, STAGE_W + pad * 2, STAGE_H + pad);
 
-  const glowR = Math.max(220, Math.min(STAGE_W, PLAY_H) * 0.55);
+  const glowR = Math.max(220, Math.min(STAGE_W, STAGE_H) * 0.55);
   const glow = g.createRadialGradient(STAGE_W / 2, horizon, 8, STAGE_W / 2, horizon, glowR);
   glow.addColorStop(0, p.haze);
   glow.addColorStop(1, "rgba(0,0,0,0)");
@@ -228,14 +227,13 @@ function drawWorld(g: CanvasRenderingContext2D): void {
 }
 
 function drawVignette(g: CanvasRenderingContext2D): void {
-  const playMidY = STAGE_H - PLAY_H * 0.45;
-  const vr = Math.hypot(STAGE_W, PLAY_H) * 0.72;
+  const vr = Math.hypot(STAGE_W, STAGE_H) * 0.52;
   const v = g.createRadialGradient(
     STAGE_W / 2,
-    playMidY,
-    PLAY_H * 0.22,
+    STAGE_H * 0.55,
+    Math.min(STAGE_W, STAGE_H) * 0.18,
     STAGE_W / 2,
-    playMidY,
+    STAGE_H * 0.55,
     vr,
   );
   v.addColorStop(0, "rgba(0,0,0,0)");

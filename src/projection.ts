@@ -1,8 +1,5 @@
 import { Vector2, Vector3 } from "./math";
 
-/** Original Flash stage height. Vertical perspective stays locked to this. */
-const PLAY_H = 400;
-
 /** Faithful port of SimpleProjection from Cubefield.swf. */
 export class SimpleProjection {
   ViewWidth: number;
@@ -25,17 +22,14 @@ export class SimpleProjection {
     this.Offset = offset;
   }
 
-  /**
-   * Fill any aspect without moving the hit point.
-   * Extra portrait space becomes sky above the original 400px play band.
-   */
+  /** Full viewport, square cubes: vertical FOV tracks aspect. */
   resize(viewWidth: number, viewHeight: number): void {
     this.ViewWidth = viewWidth;
-    this.ViewHeight = PLAY_H;
+    this.ViewHeight = viewHeight;
     this.TanU = Math.tan(0.3);
-    this.TanV = Math.tan(0.22);
+    this.TanV = this.TanU * (viewHeight / Math.max(1, viewWidth));
     this.Offset.X = viewWidth / 2;
-    this.Offset.Y = viewHeight - PLAY_H / 2;
+    this.Offset.Y = viewHeight / 2;
   }
 
   Project(pt: Vector3): Vector2 {

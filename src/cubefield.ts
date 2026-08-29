@@ -16,13 +16,13 @@ import { Input } from "./input";
 
 export const PLAY_W = 550;
 export const PLAY_H = 400;
+export const BASE_GROUND = 150;
 export let STAGE_W = PLAY_W;
 export let STAGE_H = PLAY_H;
 export let SHIP_Y = PLAY_H - 8;
 
-/** Horizon in stage pixels: original 0.46 of the 400px play band, pinned to the bottom. */
 export function horizonY(): number {
-  return STAGE_H - PLAY_H * 0.54;
+  return STAGE_H * 0.46;
 }
 export const SIM_FPS = 30;
 export const SIM_DT = 1 / SIM_FPS;
@@ -166,9 +166,16 @@ export class CubeField {
   setViewSize(width: number, height: number): void {
     STAGE_W = Math.max(1, width);
     STAGE_H = Math.max(1, height);
-    SHIP_Y = STAGE_H - 8;
+    const scaleY = STAGE_H / PLAY_H;
+    SHIP_Y = STAGE_H - 8 * scaleY;
+    this.GroundHeight = BASE_GROUND * scaleY;
     this.projection.resize(STAGE_W, STAGE_H);
     this.generationWidth = (this.projection.ViewWidth / this.cubeSize) * 10;
+    let node = this.cubes.First;
+    while (node !== null) {
+      node.Data.Position.Y = this.GroundHeight;
+      node = node.Next;
+    }
     this.ship.y = SHIP_Y;
     this.ship.yTarget = SHIP_Y;
   }
