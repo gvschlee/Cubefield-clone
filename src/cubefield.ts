@@ -79,6 +79,7 @@ export class CubeField {
   density = 0.3;
   maxDensity = 0.6;
   invincibleTime = 0;
+  speedMul = 1;
   acceleration = 5;
   drag = 0.87;
   round = -1;
@@ -174,6 +175,7 @@ export class CubeField {
     const gap = Math.max(48, this.cubeSize * persp);
     const targetY = SHIP_Y - gap;
     this.GroundHeight = (targetY - this.projection.Offset.Y) / Math.max(1e-6, persp);
+    this.speedMul = STAGE_W > STAGE_H ? 1.04 : 1;
     this.generationWidth = (this.projection.ViewWidth / this.cubeSize) * 10;
     let node = this.cubes.First;
     while (node !== null) {
@@ -182,6 +184,10 @@ export class CubeField {
     }
     this.ship.y = SHIP_Y;
     this.ship.yTarget = SHIP_Y;
+  }
+
+  private zStep(): number {
+    return this.Speed * this.speedMul;
   }
 
   notePointerDown(): void {
@@ -360,16 +366,16 @@ export class CubeField {
       let node = this.cubes.First;
       while (node !== null) {
         const cube = node.Data;
-        cube.Position.Z = cube.Position.Z - this.Speed;
+        cube.Position.Z = cube.Position.Z - this.zStep();
         cube.Position.X = cube.Position.X + this.XVelocity;
-        cube.Alpha = Math.min(cube.Alpha + this.Speed / 8, 100);
+        cube.Alpha = Math.min(cube.Alpha + this.zStep() / 8, 100);
         if (cube.Position.Z <= this.NearPlane) {
           this.cubes.Dequeue();
         }
         node = node.Next;
       }
 
-      this.toNextGen = this.toNextGen - this.Speed;
+      this.toNextGen = this.toNextGen - this.zStep();
       const current = this.Idle ? this.idlePattern : this.patterns[this.pattern];
       if (this.toNextGen <= 0 && current !== undefined) {
         this.toNextGen = this.cubeSize * current.GenerationDistance;
@@ -422,7 +428,7 @@ export class CubeField {
       const cube = node.Data;
       cube.Surface = "low";
       const zAfter = cube.Position.Z;
-      const zBefore = zAfter + this.Speed;
+      const zBefore = zAfter + this.zStep();
       if (
         Math.abs(cube.Position.X) <
         (this.cubeSize + this.projection.ViewWidth) / 2 +
