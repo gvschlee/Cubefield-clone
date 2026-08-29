@@ -13,17 +13,75 @@ const ctx: CanvasRenderingContext2D = maybeCtx;
 const input = new Input();
 const field = new CubeField(makeProjection(), 70, input);
 
-canvas.addEventListener("pointerdown", () => {
+function stageXFromEvent(e: PointerEvent): number {
+  const rect = canvas.getBoundingClientRect();
+  if (rect.width <= 0) {
+    return STAGE_W / 2;
+  }
+  return ((e.clientX - rect.left) / rect.width) * STAGE_W;
+}
+
+function pointerShouldSteer(e: PointerEvent): boolean {
+  return e.pointerType !== "mouse" || e.buttons > 0;
+}
+
+canvas.addEventListener("pointerdown", (e) => {
   field.notePointerDown();
   canvas.focus();
+  try {
+    canvas.setPointerCapture(e.pointerId);
+  } catch {
+    // Pointer capture is optional.
+  }
+  if (pointerShouldSteer(e)) {
+    input.setPointerSteer(stageXFromEvent(e));
+  }
+  e.preventDefault();
 });
 
+canvas.addEventListener("pointermove", (e) => {
+  if (!pointerShouldSteer(e)) {
+    return;
+  }
+  input.setPointerSteer(stageXFromEvent(e));
+});
+
+function endPointer(): void {
+  input.setPointerSteer(null);
+}
+
+canvas.addEventListener("pointerup", endPointer);
+canvas.addEventListener("pointercancel", endPointer);
+canvas.addEventListener("lostpointercapture", endPointer);
+
+document.addEventListener(
+  "touchmove",
+  (e) => {
+    e.preventDefault();
+  },
+  { passive: false },
+);
+document.addEventListener("gesturestart", (e) => {
+  e.preventDefault();
+});
+
+function viewportSize(): { w: number; h: number } {
+  const box = document.getElementById("letterbox");
+  if (box !== null && box.clientWidth > 0 && box.clientHeight > 0) {
+    return { w: box.clientWidth, h: box.clientHeight };
+  }
+  const vv = window.visualViewport;
+  return {
+    w: Math.floor(vv?.width ?? window.innerWidth),
+    h: Math.floor(vv?.height ?? window.innerHeight),
+  };
+}
+
 function resize(): void {
-  const maxW = window.innerWidth;
-  const maxH = window.innerHeight;
+  const { w: maxW, h: maxH } = viewportSize();
   const cssScale = Math.min(maxW / STAGE_W, maxH / STAGE_H);
-  const cssW = Math.floor(STAGE_W * cssScale);
-  const cssH = Math.floor(STAGE_H * cssScale);
+  const cssW = Math.max(1, Math.floor(STAGE_W * cssScale));
+  const cssH = Math.max(1, Math.floor(STAGE_H * cssScale));
   canvas.style.width = `${cssW}px`;
   canvas.style.height = `${cssH}px`;
   const dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -36,6 +94,9 @@ function resize(): void {
 }
 
 window.addEventListener("resize", resize);
+window.addEventListener("orientationchange", resize);
+window.visualViewport?.addEventListener("resize", resize);
+window.visualViewport?.addEventListener("scroll", resize);
 resize();
 canvas.focus();
 
@@ -291,9 +352,10 @@ function drawHud(g: CanvasRenderingContext2D): void {
     g.fillText(`Top Score: ${field.TopScore}`, STAGE_W / 2, 116);
 
     g.font = "13px Arial, Helvetica, sans-serif";
-    g.fillText("Left / Right to dodge   ·   P pause   ·   Q quality", STAGE_W / 2, 144);
+    g.fillText("Hold left / right of center to dodge", STAGE_W / 2, 140);
+    g.fillText("P pause   ·   Q quality", STAGE_W / 2, 156);
     g.font = "bold 14px Arial, Helvetica, sans-serif";
-    g.fillText("Click or press Enter to start", STAGE_W / 2, 168);
+    g.fillText("Tap, click, or press Enter to start", STAGE_W / 2, 176);
 
     g.font = "11px Arial, Helvetica, sans-serif";
     g.globalAlpha = a * 0.85;
@@ -310,7 +372,7 @@ function drawHud(g: CanvasRenderingContext2D): void {
     g.font = "bold 36px Arial, Helvetica, sans-serif";
     g.fillText("PAUSED", STAGE_W / 2, 160);
     g.font = "14px Arial, Helvetica, sans-serif";
-    g.fillText("Press P to continue", STAGE_W / 2, 210);
+    g.fillText("Press P or tap to continue", STAGE_W / 2, 210);
   }
 
   if (field.overlay.speedUpVisible) {

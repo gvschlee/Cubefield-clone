@@ -157,6 +157,12 @@ export class CubeField {
   }
 
   notePointerDown(): void {
+    if (this.Paused && !this.Dead && !this.Idle) {
+      this.Paused = false;
+      this.overlay.paused = false;
+      this.pauseTime = 16;
+      return;
+    }
     this.pointerDown = true;
   }
 
