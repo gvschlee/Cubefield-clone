@@ -175,7 +175,10 @@ export class CubeField {
     const gap = Math.max(48, this.cubeSize * persp);
     const targetY = SHIP_Y - gap;
     this.GroundHeight = (targetY - this.projection.Offset.Y) / Math.max(1e-6, persp);
-    this.speedMul = STAGE_W > STAGE_H ? 1.04 * 1.05 : 1;
+    this.speedMul =
+      STAGE_W > STAGE_H
+        ? this.closeRate(STAGE_H, STAGE_W) / Math.max(1e-6, this.closeRate(STAGE_W, STAGE_H))
+        : 1;
     this.generationWidth = (this.projection.ViewWidth / this.cubeSize) * 10;
     let node = this.cubes.First;
     while (node !== null) {
@@ -184,6 +187,17 @@ export class CubeField {
     }
     this.ship.y = SHIP_Y;
     this.ship.yTarget = SHIP_Y;
+  }
+
+  /** Screen-space cube closing rate for a W x H view, using the same camera as setViewSize. */
+  private closeRate(viewW: number, viewH: number): number {
+    const tanV = Math.tan(0.3) * (viewH / Math.max(1, viewW));
+    const persp = viewH / (viewH + 2 * this.shipZ * tanV);
+    const gap = Math.max(48, this.cubeSize * persp);
+    const ground = (viewH - 8 - gap - viewH / 2) / Math.max(1e-6, persp);
+    const zRef = 600;
+    const denom = viewH + 2 * zRef * tanV;
+    return (ground * viewH * 2 * tanV) / (denom * denom);
   }
 
   private zStep(): number {
