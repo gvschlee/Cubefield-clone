@@ -175,7 +175,7 @@ export class CubeField {
     const gap = Math.max(48, this.cubeSize * persp);
     const targetY = SHIP_Y - gap;
     this.GroundHeight = (targetY - this.projection.Offset.Y) / Math.max(1e-6, persp);
-    this.speedMul = STAGE_W > STAGE_H ? 1.04 : 1;
+    this.speedMul = STAGE_W > STAGE_H ? 1.04 * 1.05 : 1;
     this.generationWidth = (this.projection.ViewWidth / this.cubeSize) * 10;
     let node = this.cubes.First;
     while (node !== null) {
