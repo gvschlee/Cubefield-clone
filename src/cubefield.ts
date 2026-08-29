@@ -177,7 +177,7 @@ export class CubeField {
     this.GroundHeight = (targetY - this.projection.Offset.Y) / Math.max(1e-6, persp);
     this.speedMul =
       STAGE_W > STAGE_H
-        ? this.closeRate(STAGE_H, STAGE_W) / Math.max(1e-6, this.closeRate(STAGE_W, STAGE_H))
+        ? this.visualSpan(STAGE_H, STAGE_W) / Math.max(1e-6, this.visualSpan(STAGE_W, STAGE_H))
         : 1;
     this.generationWidth = (this.projection.ViewWidth / this.cubeSize) * 10;
     let node = this.cubes.First;
@@ -189,15 +189,20 @@ export class CubeField {
     this.ship.yTarget = SHIP_Y;
   }
 
-  /** Screen-space cube closing rate for a W x H view, using the same camera as setViewSize. */
-  private closeRate(viewW: number, viewH: number): number {
+  /**
+   * Fraction of view height a cube travels from the far plane to the ship.
+   * Landscape world speed is scaled so this span is eaten at the same rate as portrait.
+   * Matching raw pixels/sec overshoots because landscape is a much shorter screen.
+   */
+  private visualSpan(viewW: number, viewH: number): number {
     const tanV = Math.tan(0.3) * (viewH / Math.max(1, viewW));
-    const persp = viewH / (viewH + 2 * this.shipZ * tanV);
-    const gap = Math.max(48, this.cubeSize * persp);
-    const ground = (viewH - 8 - gap - viewH / 2) / Math.max(1e-6, persp);
-    const zRef = 600;
-    const denom = viewH + 2 * zRef * tanV;
-    return (ground * viewH * 2 * tanV) / (denom * denom);
+    const perspShip = viewH / (viewH + 2 * this.shipZ * tanV);
+    const gap = Math.max(48, this.cubeSize * perspShip);
+    const ground = (viewH - 8 - gap - viewH / 2) / Math.max(1e-6, perspShip);
+    const perspFar = viewH / (viewH + 2 * this.FarPlane * tanV);
+    const yShip = viewH / 2 + ground * perspShip;
+    const yFar = viewH / 2 + ground * perspFar;
+    return (yShip - yFar) / Math.max(1, viewH);
   }
 
   private zStep(): number {
