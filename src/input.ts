@@ -3,6 +3,7 @@ export class Input {
   private readonly down = new Set<string>();
   /** -1 = left, 1 = right, 0 = none. Set from touch / held pointer. */
   private pointerSteer = 0;
+  viewWidth = 550;
 
   constructor() {
     if (typeof window === "undefined") {
@@ -44,8 +45,8 @@ export class Input {
       this.pointerSteer = 0;
       return;
     }
-    const mid = 275;
-    const dead = 40;
+    const mid = this.viewWidth / 2;
+    const dead = Math.max(36, this.viewWidth * 0.07);
     if (stageX < mid - dead) {
       this.pointerSteer = -1;
     } else if (stageX > mid + dead) {

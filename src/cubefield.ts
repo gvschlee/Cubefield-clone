@@ -14,9 +14,9 @@ import {
 } from "./patterns";
 import { Input } from "./input";
 
-export const STAGE_W = 550;
-export const STAGE_H = 400;
-export const SHIP_Y = STAGE_H - 8;
+export let STAGE_W = 550;
+export let STAGE_H = 400;
+export let SHIP_Y = STAGE_H - 8;
 export const SIM_FPS = 30;
 export const SIM_DT = 1 / SIM_FPS;
 
@@ -154,6 +154,16 @@ export class CubeField {
     this.generatePatterns();
     this.nextStyle();
     this.SetIdle();
+  }
+
+  setViewSize(width: number, height: number): void {
+    STAGE_W = Math.max(1, width);
+    STAGE_H = Math.max(1, height);
+    SHIP_Y = STAGE_H - 8;
+    this.projection.resize(STAGE_W, STAGE_H);
+    this.generationWidth = (this.projection.ViewWidth / this.cubeSize) * 10;
+    this.ship.y = SHIP_Y;
+    this.ship.yTarget = SHIP_Y;
   }
 
   notePointerDown(): void {

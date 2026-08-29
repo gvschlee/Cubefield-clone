@@ -77,11 +77,17 @@ function viewportSize(): { w: number; h: number } {
   };
 }
 
+function logicalStage(cssW: number, cssH: number): { w: number; h: number } {
+  const aspect = cssW / Math.max(1, cssH);
+  const orig = 550 / 400;
+  if (aspect >= orig) {
+    return { w: 400 * aspect, h: 400 };
+  }
+  return { w: 550, h: 550 / aspect };
+}
+
 function resize(): void {
-  const { w: maxW, h: maxH } = viewportSize();
-  const cssScale = Math.min(maxW / STAGE_W, maxH / STAGE_H);
-  const cssW = Math.max(1, Math.floor(STAGE_W * cssScale));
-  const cssH = Math.max(1, Math.floor(STAGE_H * cssScale));
+  const { w: cssW, h: cssH } = viewportSize();
   canvas.style.width = `${cssW}px`;
   canvas.style.height = `${cssH}px`;
   const dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -91,6 +97,9 @@ function resize(): void {
     canvas.width = bw;
     canvas.height = bh;
   }
+  const logical = logicalStage(Math.max(1, cssW), Math.max(1, cssH));
+  field.setViewSize(logical.w, logical.h);
+  input.viewWidth = logical.w;
 }
 
 window.addEventListener("resize", resize);
@@ -189,20 +198,22 @@ function withWorldBank(g: CanvasRenderingContext2D, fn: () => void): void {
 function drawWorld(g: CanvasRenderingContext2D): void {
   const p = palette();
   const horizon = STAGE_H * 0.46;
+  const pad = Math.max(STAGE_W, STAGE_H);
   const sky = g.createLinearGradient(0, 0, 0, horizon);
   sky.addColorStop(0, p.skyTop);
   sky.addColorStop(0.72, p.skyHorizon);
   sky.addColorStop(1, p.haze);
   g.fillStyle = sky;
-  g.fillRect(-80, -80, STAGE_W + 160, horizon + 80);
+  g.fillRect(-pad, -pad, STAGE_W + pad * 2, horizon + pad);
 
   const ground = g.createLinearGradient(0, horizon, 0, STAGE_H + 40);
   ground.addColorStop(0, p.groundFar);
   ground.addColorStop(1, p.groundNear);
   g.fillStyle = ground;
-  g.fillRect(-80, horizon, STAGE_W + 160, STAGE_H);
+  g.fillRect(-pad, horizon, STAGE_W + pad * 2, STAGE_H + pad);
 
-  const glow = g.createRadialGradient(STAGE_W / 2, horizon, 8, STAGE_W / 2, horizon, 220);
+  const glowR = Math.max(220, Math.min(STAGE_W, STAGE_H) * 0.55);
+  const glow = g.createRadialGradient(STAGE_W / 2, horizon, 8, STAGE_W / 2, horizon, glowR);
   glow.addColorStop(0, p.haze);
   glow.addColorStop(1, "rgba(0,0,0,0)");
   g.fillStyle = glow;
@@ -217,13 +228,14 @@ function drawWorld(g: CanvasRenderingContext2D): void {
 }
 
 function drawVignette(g: CanvasRenderingContext2D): void {
+  const vr = Math.hypot(STAGE_W, STAGE_H) * 0.52;
   const v = g.createRadialGradient(
     STAGE_W / 2,
     STAGE_H * 0.55,
-    90,
+    Math.min(STAGE_W, STAGE_H) * 0.18,
     STAGE_W / 2,
     STAGE_H * 0.55,
-    340,
+    vr,
   );
   v.addColorStop(0, "rgba(0,0,0,0)");
   v.addColorStop(1, "rgba(0,0,0,0.38)");
@@ -323,44 +335,49 @@ function drawHud(g: CanvasRenderingContext2D): void {
   g.textAlign = "center";
   const ink = field.scoreColor();
   const night = field.style === 1;
+  const cx = STAGE_W / 2;
 
   if (!field.Idle && !field.Dead) {
     g.fillStyle = night ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.28)";
     g.font = "bold 22px Arial, Helvetica, sans-serif";
-    g.fillText(String(Math.floor(field.Score)), STAGE_W / 2 + 1, 12);
+    g.fillText(String(Math.floor(field.Score)), cx + 1, 12);
     g.fillStyle = ink;
-    g.fillText(String(Math.floor(field.Score)), STAGE_W / 2, 11);
+    g.fillText(String(Math.floor(field.Score)), cx, 11);
   }
 
   if (field.overlay.menuVisible) {
     const a = field.overlay.menuAlpha / 100;
+    const menuW = Math.min(440, STAGE_W - 40);
+    const menuH = 188;
+    const menuX = (STAGE_W - menuW) / 2;
+    const menuY = Math.max(20, Math.min(STAGE_H * 0.16, STAGE_H / 2 - menuH / 2));
     g.globalAlpha = a;
     g.fillStyle = night ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.22)";
-    g.fillRect(70, 28, STAGE_W - 140, 168);
+    g.fillRect(menuX, menuY, menuW, menuH);
     g.strokeStyle = night ? "rgba(120,255,160,0.25)" : "rgba(0,0,0,0.12)";
-    g.strokeRect(70.5, 28.5, STAGE_W - 141, 167);
+    g.strokeRect(menuX + 0.5, menuY + 0.5, menuW - 1, menuH - 1);
 
     g.fillStyle = ink;
     g.font = "bold 46px Arial, Helvetica, sans-serif";
-    g.fillText("CUBEFIELD", STAGE_W / 2, 42);
+    g.fillText("CUBEFIELD", cx, menuY + 14);
     g.font = "13px Arial, Helvetica, sans-serif";
     g.fillStyle = night ? "#b6f0c8" : "#334155";
-    g.fillText("A fan clone of the 2006 original", STAGE_W / 2, 92);
+    g.fillText("A fan clone of the 2006 original", cx, menuY + 64);
 
     g.fillStyle = ink;
     g.font = "16px Arial, Helvetica, sans-serif";
-    g.fillText(`Top Score: ${field.TopScore}`, STAGE_W / 2, 116);
+    g.fillText(`Top Score: ${field.TopScore}`, cx, menuY + 88);
 
     g.font = "13px Arial, Helvetica, sans-serif";
-    g.fillText("Hold left / right of center to dodge", STAGE_W / 2, 140);
-    g.fillText("P pause   ·   Q quality", STAGE_W / 2, 156);
+    g.fillText("Hold left / right of center to dodge", cx, menuY + 112);
+    g.fillText("P pause   ·   Q quality", cx, menuY + 128);
     g.font = "bold 14px Arial, Helvetica, sans-serif";
-    g.fillText("Tap, click, or press Enter to start", STAGE_W / 2, 176);
+    g.fillText("Tap, click, or press Enter to start", cx, menuY + 148);
 
     g.font = "11px Arial, Helvetica, sans-serif";
     g.globalAlpha = a * 0.85;
-    g.fillText("Cubefield by Max Abernethy / Flecko.net 2006", STAGE_W / 2, 318);
-    g.fillText("This is a fan clone.", STAGE_W / 2, 334);
+    g.fillText("Cubefield by Max Abernethy / Flecko.net 2006", cx, STAGE_H - 48);
+    g.fillText("This is a fan clone.", cx, STAGE_H - 32);
   }
 
   g.globalAlpha = 1;
@@ -370,16 +387,16 @@ function drawHud(g: CanvasRenderingContext2D): void {
     g.fillRect(0, 0, STAGE_W, STAGE_H);
     g.fillStyle = "#ffffff";
     g.font = "bold 36px Arial, Helvetica, sans-serif";
-    g.fillText("PAUSED", STAGE_W / 2, 160);
+    g.fillText("PAUSED", cx, STAGE_H * 0.4);
     g.font = "14px Arial, Helvetica, sans-serif";
-    g.fillText("Press P or tap to continue", STAGE_W / 2, 210);
+    g.fillText("Press P or tap to continue", cx, STAGE_H * 0.4 + 50);
   }
 
   if (field.overlay.speedUpVisible) {
     g.globalAlpha = Math.max(0, Math.min(1, field.overlay.speedUpAlpha / 100));
     g.fillStyle = field.scoreColor();
     g.font = "bold 40px Arial, Helvetica, sans-serif";
-    g.fillText("SPEED UP", STAGE_W / 2, 170);
+    g.fillText("SPEED UP", cx, STAGE_H * 0.42);
   }
 
   g.restore();

@@ -2,10 +2,10 @@ import { Vector2, Vector3 } from "./math";
 
 /** Faithful port of SimpleProjection from Cubefield.swf. */
 export class SimpleProjection {
-  readonly ViewWidth: number;
-  readonly ViewHeight: number;
-  readonly TanU: number;
-  readonly TanV: number;
+  ViewWidth: number;
+  ViewHeight: number;
+  TanU: number;
+  TanV: number;
   Offset: Vector2;
 
   constructor(
@@ -20,6 +20,16 @@ export class SimpleProjection {
     this.TanU = Math.tan(u);
     this.TanV = Math.tan(v);
     this.Offset = offset;
+  }
+
+  /** Keep cubes square while filling an arbitrary aspect ratio. */
+  resize(viewWidth: number, viewHeight: number): void {
+    this.ViewWidth = viewWidth;
+    this.ViewHeight = viewHeight;
+    this.Offset.X = viewWidth / 2;
+    this.Offset.Y = viewHeight / 2;
+    this.TanU = Math.tan(0.3);
+    this.TanV = this.TanU * (viewHeight / Math.max(1, viewWidth));
   }
 
   Project(pt: Vector3): Vector2 {
