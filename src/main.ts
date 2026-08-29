@@ -54,16 +54,18 @@ canvas.addEventListener("pointerup", endPointer);
 canvas.addEventListener("pointercancel", endPointer);
 canvas.addEventListener("lostpointercapture", endPointer);
 
-document.addEventListener(
-  "touchmove",
-  (e) => {
-    e.preventDefault();
-  },
-  { passive: false },
-);
-document.addEventListener("gesturestart", (e) => {
+function blockBrowserGesture(e: Event): void {
   e.preventDefault();
-});
+}
+
+document.addEventListener("touchstart", blockBrowserGesture, { passive: false, capture: true });
+document.addEventListener("touchmove", blockBrowserGesture, { passive: false, capture: true });
+document.addEventListener("gesturestart", blockBrowserGesture, { capture: true });
+document.addEventListener("gesturechange", blockBrowserGesture, { capture: true });
+document.addEventListener("gestureend", blockBrowserGesture, { capture: true });
+document.addEventListener("dblclick", blockBrowserGesture, { capture: true });
+document.addEventListener("contextmenu", blockBrowserGesture, { capture: true });
+document.addEventListener("selectstart", blockBrowserGesture, { capture: true });
 
 function viewportSize(): { w: number; h: number } {
   const vv = window.visualViewport;
