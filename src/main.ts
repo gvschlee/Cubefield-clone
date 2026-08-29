@@ -1,5 +1,5 @@
 import "./style.css";
-import { CubeField, STAGE_H, STAGE_W, SIM_DT, makeProjection } from "./cubefield";
+import { CubeField, STAGE_H, STAGE_W, SIM_DT, makeProjection, horizonY, PLAY_H } from "./cubefield";
 import { Input } from "./input";
 import { Model } from "./model";
 
@@ -186,7 +186,7 @@ function palette(): WorldPalette {
 
 function withWorldBank(g: CanvasRenderingContext2D, fn: () => void): void {
   const cx = STAGE_W / 2;
-  const cy = STAGE_H * 0.46;
+  const cy = horizonY();
   g.save();
   g.translate(cx, cy);
   g.rotate((field.bankRotation * Math.PI) / 180);
@@ -197,7 +197,7 @@ function withWorldBank(g: CanvasRenderingContext2D, fn: () => void): void {
 
 function drawWorld(g: CanvasRenderingContext2D): void {
   const p = palette();
-  const horizon = STAGE_H * 0.46;
+  const horizon = horizonY();
   const pad = Math.max(STAGE_W, STAGE_H);
   const sky = g.createLinearGradient(0, 0, 0, horizon);
   sky.addColorStop(0, p.skyTop);
@@ -212,7 +212,7 @@ function drawWorld(g: CanvasRenderingContext2D): void {
   g.fillStyle = ground;
   g.fillRect(-pad, horizon, STAGE_W + pad * 2, STAGE_H + pad);
 
-  const glowR = Math.max(220, Math.min(STAGE_W, STAGE_H) * 0.55);
+  const glowR = Math.max(220, Math.min(STAGE_W, PLAY_H) * 0.55);
   const glow = g.createRadialGradient(STAGE_W / 2, horizon, 8, STAGE_W / 2, horizon, glowR);
   glow.addColorStop(0, p.haze);
   glow.addColorStop(1, "rgba(0,0,0,0)");
@@ -228,13 +228,14 @@ function drawWorld(g: CanvasRenderingContext2D): void {
 }
 
 function drawVignette(g: CanvasRenderingContext2D): void {
-  const vr = Math.hypot(STAGE_W, STAGE_H) * 0.52;
+  const playMidY = STAGE_H - PLAY_H * 0.45;
+  const vr = Math.hypot(STAGE_W, PLAY_H) * 0.72;
   const v = g.createRadialGradient(
     STAGE_W / 2,
-    STAGE_H * 0.55,
-    Math.min(STAGE_W, STAGE_H) * 0.18,
+    playMidY,
+    PLAY_H * 0.22,
     STAGE_W / 2,
-    STAGE_H * 0.55,
+    playMidY,
     vr,
   );
   v.addColorStop(0, "rgba(0,0,0,0)");

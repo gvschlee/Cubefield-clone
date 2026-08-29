@@ -14,9 +14,16 @@ import {
 } from "./patterns";
 import { Input } from "./input";
 
-export let STAGE_W = 550;
-export let STAGE_H = 400;
-export let SHIP_Y = STAGE_H - 8;
+export const PLAY_W = 550;
+export const PLAY_H = 400;
+export let STAGE_W = PLAY_W;
+export let STAGE_H = PLAY_H;
+export let SHIP_Y = PLAY_H - 8;
+
+/** Horizon in stage pixels: original 0.46 of the 400px play band, pinned to the bottom. */
+export function horizonY(): number {
+  return STAGE_H - PLAY_H * 0.54;
+}
 export const SIM_FPS = 30;
 export const SIM_DT = 1 / SIM_FPS;
 
