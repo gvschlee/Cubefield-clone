@@ -231,8 +231,8 @@ export class CubeField {
     this.overlay.paused = false;
     // Slow first stretch: leftover attract cubes were spawning as a wall in your face.
     this.invincibleTime = 60;
-    this.Speed = 26;
-    this.SpeedTarget = 38;
+    this.Speed = 26 * 1.15;
+    this.SpeedTarget = 38 * 1.15;
     this.updateAccel();
     this.surfaceAlpha = 100;
     this.patternWidth = 7;

@@ -77,7 +77,7 @@ field.Begin();
 check("begin not idle", field.Idle === false);
 check("begin invincible 60", field.invincibleTime === 60);
 check("begin blink", field.ship.blinkTime === 24);
-check("begin speed target 46", field.SpeedTarget === 46, "got " + field.SpeedTarget);
+check("begin speed target 51.7", Math.abs(field.SpeedTarget - 51.7) < 1e-6, "got " + field.SpeedTarget);
 check("begin style 0", field.style === 0);
 check("begin pattern 0 intake", field.patterns[0] instanceof IntakePattern);
 check("pattern list length 16", field.patterns.length === 16);
