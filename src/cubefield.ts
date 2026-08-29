@@ -79,6 +79,8 @@ export class CubeField {
   density = 0.3;
   maxDensity = 0.6;
   invincibleTime = 0;
+  /** Scale world Z so screen closing speed matches the original 550x400 view. */
+  speedMul = 1;
   acceleration = 5;
   drag = 0.87;
   round = -1;
@@ -166,10 +168,22 @@ export class CubeField {
   setViewSize(width: number, height: number): void {
     STAGE_W = Math.max(1, width);
     STAGE_H = Math.max(1, height);
-    const scaleY = STAGE_H / PLAY_H;
-    SHIP_Y = STAGE_H - 8 * scaleY;
-    this.GroundHeight = BASE_GROUND * scaleY;
+    SHIP_Y = STAGE_H - 8;
     this.projection.resize(STAGE_W, STAGE_H);
+    const vh = this.projection.ViewHeight;
+    const tanV = this.projection.TanV;
+    const persp = vh / (vh + 2 * this.shipZ * tanV);
+    const gap = Math.max(48, this.cubeSize * persp);
+    const targetY = SHIP_Y - gap;
+    this.GroundHeight = (targetY - this.projection.Offset.Y) / Math.max(1e-6, persp);
+    const zRef = 600;
+    const closeRate = (ground: number, viewH: number, tan: number): number => {
+      const denom = viewH + 2 * zRef * tan;
+      return (ground * viewH * 2 * tan) / (denom * denom);
+    };
+    const original = closeRate(BASE_GROUND, PLAY_H, Math.tan(0.22));
+    const current = closeRate(this.GroundHeight, vh, tanV);
+    this.speedMul = original / Math.max(1e-6, current);
     this.generationWidth = (this.projection.ViewWidth / this.cubeSize) * 10;
     let node = this.cubes.First;
     while (node !== null) {
@@ -178,6 +192,10 @@ export class CubeField {
     }
     this.ship.y = SHIP_Y;
     this.ship.yTarget = SHIP_Y;
+  }
+
+  private zStep(): number {
+    return this.Speed * this.speedMul;
   }
 
   notePointerDown(): void {
@@ -356,16 +374,16 @@ export class CubeField {
       let node = this.cubes.First;
       while (node !== null) {
         const cube = node.Data;
-        cube.Position.Z = cube.Position.Z - this.Speed;
+        cube.Position.Z = cube.Position.Z - this.zStep();
         cube.Position.X = cube.Position.X + this.XVelocity;
-        cube.Alpha = Math.min(cube.Alpha + this.Speed / 8, 100);
+        cube.Alpha = Math.min(cube.Alpha + this.zStep() / 8, 100);
         if (cube.Position.Z <= this.NearPlane) {
           this.cubes.Dequeue();
         }
         node = node.Next;
       }
 
-      this.toNextGen = this.toNextGen - this.Speed;
+      this.toNextGen = this.toNextGen - this.zStep();
       const current = this.Idle ? this.idlePattern : this.patterns[this.pattern];
       if (this.toNextGen <= 0 && current !== undefined) {
         this.toNextGen = this.cubeSize * current.GenerationDistance;

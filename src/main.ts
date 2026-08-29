@@ -74,12 +74,7 @@ function viewportSize(): { w: number; h: number } {
 }
 
 function logicalStage(cssW: number, cssH: number): { w: number; h: number } {
-  const aspect = cssW / Math.max(1, cssH);
-  const orig = 550 / 400;
-  if (aspect >= orig) {
-    return { w: 400 * aspect, h: 400 };
-  }
-  return { w: 550, h: 550 / aspect };
+  return { w: cssW, h: cssH };
 }
 
 function resize(): void {
